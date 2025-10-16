@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import Toast from '@/components/ui/Toast';
+import QueryProvider from '@/providers/query-provider';
 
 export const metadata: Metadata = {
-  title: "RFP Automation Platform",
-  description: "AI-powered RFP response generation",
+  title: "RFPGen - AI-Powered RFP Automation",
+  description: "Automate RFP responses with AI",
 };
 
 export default function RootLayout({
@@ -17,8 +18,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body>
-          {children}
-          <Toast />
+          <QueryProvider>
+            {children}
+            <Toast />
+          </QueryProvider>
         </body>
       </html>
     </ClerkProvider>
