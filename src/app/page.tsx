@@ -11,7 +11,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    <div className="min-h-screen bg-brand-background p-8">
+    <div className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto space-y-8">
         <Card>
           <h1 className="text-3xl font-bold text-brand-primary mb-4">

@@ -1,10 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F3F4F6;
+  --background: linear-gradient(to bottom right, #F3F4F6, #E5E7EB);
   --foreground: #171717;
   
-  /* Brand Colors */
   --brand-primary: #8B5CF6;
   --brand-tinted: #F3F1F8;
   --brand-background: #F3F4F6;
@@ -30,9 +29,10 @@
 }
 
 body {
-  background: var(--background);
+  background: #F8F9FA;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
 }
 
 .scrollbar-hide {
