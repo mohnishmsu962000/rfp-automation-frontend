@@ -26,7 +26,7 @@ export default function RFPDetailPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const questions = rfp?.questions || [];
+  const questions = useMemo(() => rfp?.questions || [], [rfp?.questions]);
   
   const paginatedQuestions = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;

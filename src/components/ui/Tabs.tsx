@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState} from 'react';
 import { cn } from '@/lib/utils';
 
 interface TabsContextType {

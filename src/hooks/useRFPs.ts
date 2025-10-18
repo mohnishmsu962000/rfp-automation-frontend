@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 import { createApiClient } from '@/lib/api-client';
-import { RFPProject, RFPQuestion } from '@/types/models';
+import { RFPProject } from '@/types/models';
 
 export function useRFPs() {
   const { getToken } = useAuth();
