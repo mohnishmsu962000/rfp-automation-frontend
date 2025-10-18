@@ -25,7 +25,7 @@ const FILE_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }
 
 export default function DocumentsPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [deletingDocument, setDeletingDocument] = useState<any>(null);
+  const [deletingDocument, setDeletingDocument] = useState<{ id: string; filename: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   
