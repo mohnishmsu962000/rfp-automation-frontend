@@ -12,10 +12,9 @@ export interface User {
     company_id: string;
     filename: string;
     file_url: string;
-    doc_type: 'proposal' | 'contract' | 'report' | 'presentation' | 'other';
-    tags: string[];
+    file_size?: number;
     uploaded_at: string;
-    processing_status: 'pending' | 'processing' | 'completed' | 'failed';
+    processed: boolean;
   }
   
   export interface Attribute {
@@ -25,7 +24,7 @@ export interface User {
     key: string;
     value: string;
     category: 'technical' | 'compliance' | 'business' | 'product';
-    source_doc_id: string | null;
+    source_doc_id?: string;
     last_updated: string;
   }
   
@@ -45,10 +44,9 @@ export interface User {
     id: string;
     project_id: string;
     question_text: string;
-    answer_text: string;
+    answer_text: string | null;
     trust_score: number;
-    source_type: 'attribute' | 'rag';
-    source_ids: string[];
+    source_type: string | null;
     user_edited: boolean;
     created_at: string;
     updated_at: string;

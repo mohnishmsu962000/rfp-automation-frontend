@@ -29,7 +29,9 @@
 }
 
 body {
-  background: #F8F9FA;
+  background: 
+  radial-gradient(circle at 20% 90%, rgba(253, 234, 206, 0.6), transparent 60%),
+  linear-gradient(160deg, #F9FAFB 0%, #F3F4F6 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   min-height: 100vh;
@@ -42,4 +44,14 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+.animate-gradientShift {
+  background: linear-gradient(270deg, #F3F4F6, #E5E7EB, #F3F4F6);
+  background-size: 600% 600%;
+  animation: gradientShift 15s ease infinite;
 }

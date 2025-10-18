@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { mdxCompile } from 'next/dist/build/swc/generated-native';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -21,7 +22,7 @@ export default function Button({
     <button
       disabled={disabled || isLoading}
       className={cn(
-        'inline-flex items-center justify-center font-semibold transition-colors',
+        'inline-flex items-center justify-center font-medium transition-colors',
         'focus:outline-none focus:ring-2 focus:ring-offset-2',
         'rounded-[20px]',
         {
@@ -31,7 +32,7 @@ export default function Button({
         },
         {
           'bg-brand-primary text-white hover:bg-brand-primary/90 focus:ring-brand-primary/50': variant === 'primary',
-          'bg-brand-tinted text-brand-primary hover:bg-brand-tinted/80 focus:ring-brand-primary/50': variant === 'secondary',
+          'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 focus:ring-brand-primary/50': variant === 'secondary',
           'border-2 border-brand-primary bg-white text-brand-primary hover:bg-brand-tinted focus:ring-brand-primary/50': variant === 'outline',
           'text-brand-primary hover:bg-brand-tinted focus:ring-brand-primary/50': variant === 'ghost',
         },

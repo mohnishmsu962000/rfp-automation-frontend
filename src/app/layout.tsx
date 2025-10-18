@@ -3,6 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import Toast from '@/components/ui/Toast';
 import QueryProvider from '@/providers/query-provider';
+import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
   title: "RFPGen - AI-Powered RFP Automation",
@@ -19,6 +20,7 @@ export default function RootLayout({
       <html lang="en">
         <body>
           <QueryProvider>
+            <Toaster position="top-right" />
             {children}
             <Toast />
           </QueryProvider>
