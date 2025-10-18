@@ -30,8 +30,9 @@ export default function EditAnswerModal({ isOpen, onClose, question, rfpId }: Ed
       });
       toast.success('Answer updated successfully');
       onClose();
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to update answer');
+    } catch (error: unknown) {
+      console.error('Error updating answer:', error);
+      toast.error('Failed to update answer');
     }
   };
 
@@ -50,8 +51,9 @@ export default function EditAnswerModal({ isOpen, onClose, question, rfpId }: Ed
       setEditedAnswer(result.rephrased_answer);
       setInstruction('');
       toast.success('Answer rephrased! Review and save if you like it.');
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to rephrase answer');
+    } catch (error: unknown) {
+      console.error('Error rephrasing answer:', error);
+      toast.error('Failed to rephrase answer');
     }
   };
 
@@ -114,15 +116,15 @@ export default function EditAnswerModal({ isOpen, onClose, question, rfpId }: Ed
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
           <div className="flex items-center gap-2 text-sm text-gray-600">
-          <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded ${
-  question.trust_score >= 0.7 
-    ? 'bg-green-100 text-green-700'
-    : question.trust_score >= 0.4
-    ? 'bg-yellow-100 text-yellow-700'
-    : 'bg-red-100 text-red-700'
-}`}>
-  {question.trust_score > 1 ? Math.min(Math.round(question.trust_score), 100) : Math.min(Math.round(question.trust_score * 100), 100)}% confidence
-</span>
+            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded ${
+              question.trust_score >= 0.7 
+                ? 'bg-green-100 text-green-700'
+                : question.trust_score >= 0.4
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-red-100 text-red-700'
+            }`}>
+              {question.trust_score > 1 ? Math.min(Math.round(question.trust_score), 100) : Math.min(Math.round(question.trust_score * 100), 100)}% confidence
+            </span>
             {question.user_edited && (
               <span className="text-gray-500">· Edited by user</span>
             )}

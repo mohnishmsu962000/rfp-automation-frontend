@@ -7,6 +7,16 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import { createApiClient } from '@/lib/api-client';
 import { useState, useEffect } from 'react';
 
+interface RFP {
+  questions?: Array<{ trust_score?: number }>;
+}
+
+interface ErrorResponse {
+  response?: {
+    status?: number;
+  };
+}
+
 export default function DashboardPage() {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -38,10 +48,11 @@ export default function DashboardPage() {
           console.log('Trying /api/auth/me...');
           await apiClient.get('/api/auth/me');
           console.log('/api/auth/me succeeded');
-        } catch (error: any) {
-          console.log('/api/auth/me failed:', error.response?.status);
+        } catch (error) {
+          const err = error as ErrorResponse;
+          console.log('/api/auth/me failed:', err.response?.status);
           
-          if (error.response?.status === 401 || error.response?.status === 403) {
+          if (err.response?.status === 401 || err.response?.status === 403) {
             console.log('Attempting onboarding...');
             const onboardRes = await apiClient.post('/api/auth/onboard', {
               company_name: 'Default Company',
@@ -59,12 +70,12 @@ export default function DashboardPage() {
         ]);
 
         const docs = docsRes.data;
-        const rfps = rfpsRes.data;
+        const rfps: RFP[] = rfpsRes.data;
         const usage = usageRes.data;
 
-        const allQuestions = rfps.flatMap((rfp: any) => rfp.questions || []);
+        const allQuestions = rfps.flatMap((rfp: RFP) => rfp.questions || []);
         const avgTrust = allQuestions.length > 0
-          ? Math.round(allQuestions.reduce((sum: number, q: any) => sum + (q.trust_score || 0), 0) / allQuestions.length)
+          ? Math.round(allQuestions.reduce((sum: number, q) => sum + (q.trust_score || 0), 0) / allQuestions.length)
           : 0;
 
         setStats({
@@ -99,10 +110,10 @@ export default function DashboardPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-      <h1 className="text-[100px] font-semibold mb-2 bg-gradient-to-r from-[#8B5CF6] via-[#A78BFA] to-[#C4B5FD] bg-clip-text text-transparent">
-  Hey, Mohnish
-</h1>
-        <p className="text-gray-600">Welcome back! Here's your RFP automation overview.</p>
+        <h1 className="text-[100px] font-semibold mb-2 bg-gradient-to-r from-[#8B5CF6] via-[#A78BFA] to-[#C4B5FD] bg-clip-text text-transparent">
+          Hey, Mohnish
+        </h1>
+        <p className="text-gray-600">Welcome back! Here&apos;s your RFP automation overview.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

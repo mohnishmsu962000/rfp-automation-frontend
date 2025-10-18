@@ -37,8 +37,9 @@ export default function AddAttributeModal({ isOpen, onClose }: AddAttributeModal
       queryClient.invalidateQueries({ queryKey: ['attributes'] });
       handleClose();
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to add attribute');
+    onError: (error: unknown) => {
+      console.error('Error adding attribute:', error);
+      toast.error('Failed to add attribute');
     },
   });
 

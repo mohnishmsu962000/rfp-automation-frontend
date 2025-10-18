@@ -44,8 +44,9 @@ export default function EditAttributeModal({ isOpen, onClose, attribute }: EditA
       queryClient.invalidateQueries({ queryKey: ['attributes'] });
       onClose();
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to update attribute');
+    onError: (error: unknown) => {
+      console.error('Error updating attribute:', error);
+      toast.error('Failed to update attribute');
     },
   });
 

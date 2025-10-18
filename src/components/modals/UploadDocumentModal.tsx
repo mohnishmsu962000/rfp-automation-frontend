@@ -54,8 +54,9 @@ export default function UploadDocumentModal({ isOpen, onClose }: UploadDocumentM
       queryClient.invalidateQueries({ queryKey: ['usage-stats'] });
       handleClose();
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to upload document');
+    onError: (error: unknown) => {
+      console.error('Error uploading document:', error);
+      toast.error('Failed to upload document');
       setUploadProgress(0);
     },
   });
@@ -131,7 +132,7 @@ export default function UploadDocumentModal({ isOpen, onClose }: UploadDocumentM
           </label>
           <select
             value={docType}
-            onChange={(e) => setDocType(e.target.value as any)}
+            onChange={(e) => setDocType(e.target.value as 'proposal' | 'contract' | 'report' | 'presentation' | 'other')}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent bg-white"
             disabled={uploadMutation.isPending}
           >

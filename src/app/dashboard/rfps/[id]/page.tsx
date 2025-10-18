@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import EditAnswerModal from '@/components/modals/EditAnswerModal';
 import { useRFP } from '@/hooks/useRFPs';
-import { FiArrowLeft, FiDownload, FiEdit2, FiLoader, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiLoader, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { createApiClient } from '@/lib/api-client';
@@ -25,7 +25,6 @@ export default function RFPDetailPage() {
   const [rfpName, setRfpName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hoveredAnswer, setHoveredAnswer] = useState<string | null>(null);
 
   const questions = rfp?.questions || [];
   
@@ -52,8 +51,9 @@ export default function RFPDetailPage() {
       link.remove();
       
       toast.success(`Exported as ${format.toUpperCase()}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Failed to export RFP');
+      console.error('Export error:', error);
     }
   };
 
@@ -137,7 +137,7 @@ export default function RFPDetailPage() {
               </span>
             )}
             <select
-              onChange={(e) => handleExport(e.target.value as any)}
+              onChange={(e) => handleExport(e.target.value as 'xlsx' | 'docx' | 'pdf')}
               className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
               defaultValue=""
             >

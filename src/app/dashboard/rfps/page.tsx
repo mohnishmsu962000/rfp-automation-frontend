@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { RFPProject } from '@/types/models';
 
-const STATUS_CONFIG: Record<RFPProject['status'], { icon: any; color: string; label: string; bgColor: string }> = {
+const STATUS_CONFIG: Record<RFPProject['status'], { icon: React.ComponentType<{ className?: string }>; color: string; label: string; bgColor: string }> = {
   pending: { 
     icon: FiClock, 
     color: 'text-yellow-700', 
@@ -54,7 +54,7 @@ export default function RFPsPage() {
   const filteredAndSortedRFPs = useMemo(() => {
     if (!rfps) return [];
 
-    let filtered = rfps.filter(rfp => {
+    const filtered = rfps.filter(rfp => {
       const matchesSearch = rfp.rfp_name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || rfp.status === statusFilter;
       return matchesSearch && matchesStatus;

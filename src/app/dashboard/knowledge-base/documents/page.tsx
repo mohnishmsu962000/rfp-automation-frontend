@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 
 type SortOption = 'newest' | 'oldest' | 'name' | 'size';
 
-const FILE_TYPE_ICONS: Record<string, any> = {
+const FILE_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   pdf: FiFileText,
   doc: FiFileText,
   docx: FiFileText,
@@ -34,7 +34,7 @@ export default function DocumentsPage() {
   const filteredAndSortedDocs = useMemo(() => {
     if (!documents) return [];
 
-    let filtered = documents.filter(doc =>
+    const filtered = documents.filter(doc =>
       doc.filename.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -56,7 +56,7 @@ export default function DocumentsPage() {
     return filtered;
   }, [documents, searchQuery, sortBy]);
 
-  const getFileIcon = (filename: string) => {
+  const getFileIcon = (filename: string): React.ComponentType<{ className?: string }> => {
     const ext = filename.split('.').pop()?.toLowerCase() || '';
     return FILE_TYPE_ICONS[ext] || FILE_TYPE_ICONS.default;
   };

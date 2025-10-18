@@ -40,8 +40,9 @@ export default function UploadRFPModal({ isOpen, onClose }: UploadRFPModalProps)
       const result = await uploadRFP.mutateAsync({ file, rfpName: rfpName.trim() });
       toast.success(result.message || 'RFP uploaded successfully!');
       handleClose();
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to upload RFP');
+    } catch (error: unknown) {
+      console.error('Error uploading RFP:', error);
+      toast.error('Failed to upload RFP');
     }
   };
 
@@ -121,7 +122,7 @@ export default function UploadRFPModal({ isOpen, onClose }: UploadRFPModalProps)
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-800">
             <strong>Note:</strong> Processing may take 1-3 minutes depending on document size. 
-            You'll be able to review and edit all generated answers.
+            You&apos;ll be able to review and edit all generated answers.
           </p>
         </div>
 

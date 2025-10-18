@@ -35,7 +35,7 @@ export default function AttributesPage() {
   const filteredAndSortedAttributes = useMemo(() => {
     if (!attributes) return [];
     
-    let filtered = attributes.filter(attr => {
+    const filtered = attributes.filter(attr => {
       const matchesSearch = 
         attr.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
         attr.value.toLowerCase().includes(searchQuery.toLowerCase());

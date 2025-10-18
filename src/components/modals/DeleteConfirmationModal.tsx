@@ -45,8 +45,9 @@ export default function DeleteConfirmationModal({
       }
       onClose();
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to delete');
+    onError: (error: unknown) => {
+      console.error('Error deleting item:', error);
+      toast.error('Failed to delete');
     },
   });
 
