@@ -95,11 +95,11 @@ export default function RFPsPage() {
 
   return (
     <>
-      <div className="space-y-6 p-4">
-        <div className="flex items-center justify-between p-4">
+      <div className="space-y-4 p-8 px-16">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-brand-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              RFP Projects
+            <h1 className="text-5xl md:text-3xl font-medium mb-3 bg-gradient-to-r from-brand-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              RFPs
             </h1>
             <p className="text-gray-600 mt-2">Upload and manage your RFP responses with AI</p>
           </div>
@@ -121,7 +121,7 @@ export default function RFPsPage() {
               placeholder="Search RFPs by name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             />
           </div>
 
@@ -208,7 +208,7 @@ export default function RFPsPage() {
                             <FiFileText className="h-5 w-5 text-brand-primary" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-gray-900 truncate">{rfp.rfp_name}</p>
+                            <p className="font-medium text-gray-900 truncate">{rfp.rfp_name}</p>
                             <p className="text-xs text-gray-500 truncate">{rfp.rfp_file_url.split('/').pop()}</p>
                           </div>
                         </div>

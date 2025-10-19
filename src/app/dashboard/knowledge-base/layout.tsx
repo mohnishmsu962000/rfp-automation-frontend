@@ -17,14 +17,14 @@ export default function KnowledgeBaseLayout({
   const isAttributes = pathname.includes('/attributes');
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 px-16 space-y-2">
       <div className="flex items-center justify-between">
-        <h1 className="text-5xl font-semibold bg-gradient-to-r from-[#8B5CF6] via-[#A78BFA] to-[#C4B5FD] bg-clip-text text-transparent">
+        <h1 className="text-5xl md:text-3xl font-medium mb-3 bg-gradient-to-r from-brand-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
           Knowledge Base
         </h1>
         
         {stats && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-gray-200 shadow-sm">
             <FiFile className="h-4 w-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-700">
               {stats.documents.used} / {stats.documents.limit}
@@ -34,34 +34,34 @@ export default function KnowledgeBaseLayout({
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-8 border-b border-gray-200">
         <button
           onClick={() => router.push('/dashboard/knowledge-base/documents')}
-          className={`group relative inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+          className={`flex items-center gap-2 px-1 py-3 text-sm font-medium transition-colors relative ${
             isDocuments
-              ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30'
-              : 'bg-white text-gray-600 hover:text-brand-primary hover:bg-brand-tinted border border-gray-200'
+              ? 'text-brand-primary'
+              : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          <FiFile className={`h-4 w-4 transition-transform duration-200 ${isDocuments ? 'scale-110' : ''}`} />
-          Documents
+          <FiFile className="h-4 w-4" />
+          <span>Documents</span>
           {isDocuments && (
-            <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/20 to-transparent opacity-50" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary"></div>
           )}
         </button>
 
         <button
           onClick={() => router.push('/dashboard/knowledge-base/attributes')}
-          className={`group relative inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+          className={`flex items-center gap-2 px-1 py-3 text-sm font-medium transition-colors relative ${
             isAttributes
-              ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30'
-              : 'bg-white text-gray-600 hover:text-brand-primary hover:bg-brand-tinted border border-gray-200'
+              ? 'text-brand-primary'
+              : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          <FiTag className={`h-4 w-4 transition-transform duration-200 ${isAttributes ? 'scale-110' : ''}`} />
-          Attributes
+          <FiTag className="h-4 w-4" />
+          <span>Attributes</span>
           {isAttributes && (
-            <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/20 to-transparent opacity-50" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary"></div>
           )}
         </button>
       </div>

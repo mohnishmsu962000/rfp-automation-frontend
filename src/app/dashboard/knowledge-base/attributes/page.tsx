@@ -77,9 +77,7 @@ export default function AttributesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-brand-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Attributes
-            </h1>
+            
             <p className="text-gray-600 mt-2">Manage company attributes and metadata</p>
           </div>
           <Button 
@@ -182,7 +180,7 @@ export default function AttributesPage() {
                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-primary/10 to-purple-500/10 flex items-center justify-center flex-shrink-0">
                           <FiTag className="h-5 w-5 text-brand-primary" />
                         </div>
-                        <span className="font-semibold text-gray-900">{attr.key}</span>
+                        <span className="font-medium text-gray-900">{attr.key}</span>
                       </div>
                     </td>
                     <td className="py-4 px-6 text-gray-700">{attr.value}</td>

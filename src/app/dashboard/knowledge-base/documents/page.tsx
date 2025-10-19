@@ -73,9 +73,7 @@ export default function DocumentsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-brand-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Documents
-            </h1>
+           
             <p className="text-gray-600 mt-2">Upload and manage your knowledge base documents</p>
           </div>
           <Button 
@@ -96,7 +94,7 @@ export default function DocumentsPage() {
               placeholder="Search documents by name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             />
           </div>
 
@@ -165,7 +163,7 @@ export default function DocumentsPage() {
                             <FileIcon className="h-5 w-5 text-brand-primary" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-gray-900 truncate">{doc.filename}</p>
+                            <p className="font-medium text-gray-900 truncate">{doc.filename}</p>
                             <p className="text-xs text-gray-500">
                               {doc.filename.split('.').pop()?.toUpperCase()} file
                             </p>
