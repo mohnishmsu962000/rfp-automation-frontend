@@ -6,7 +6,7 @@ export default async function HomePage() {
   
   if (userId) {
     redirect('/dashboard');
-  } else {
-    redirect('/auth/sign-in');
   }
+  
+  redirect('/auth/sign-in');
 }
