@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { FiUser, FiBriefcase, FiCreditCard, FiExternalLink } from 'react-icons/fi';
+import { FiUser, FiBriefcase, FiCreditCard } from 'react-icons/fi';
 
 export default function SettingsLayout({
   children,
@@ -16,57 +16,56 @@ export default function SettingsLayout({
   const isBilling = pathname.includes('/billing');
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 px-16 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-5xl font-semibold bg-gradient-to-r from-[#8B5CF6] via-[#A78BFA] to-[#C4B5FD] bg-clip-text text-transparent">
+        <h1 className="text-3xl md:text-3xl font-medium mb-3 bg-gradient-to-r from-brand-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
           Settings
         </h1>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-8 border-b border-gray-200">
         <button
           onClick={() => router.push('/dashboard/settings/profile')}
-          className={`group relative inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+          className={`flex items-center gap-2 px-1 py-3 text-sm font-medium transition-colors relative ${
             isProfile
-              ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30'
-              : 'bg-white text-gray-600 hover:text-brand-primary hover:bg-brand-tinted border border-gray-200'
+              ? 'text-brand-primary'
+              : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          <FiUser className={`h-4 w-4 transition-transform duration-200 ${isProfile ? 'scale-110' : ''}`} />
-          My Profile
+          <FiUser className="h-4 w-4" />
+          <span>Profile</span>
           {isProfile && (
-            <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/20 to-transparent opacity-50" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary"></div>
           )}
         </button>
 
         <button
           onClick={() => router.push('/dashboard/settings/company')}
-          className={`group relative inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+          className={`flex items-center gap-2 px-1 py-3 text-sm font-medium transition-colors relative ${
             isCompany
-              ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30'
-              : 'bg-white text-gray-600 hover:text-brand-primary hover:bg-brand-tinted border border-gray-200'
+              ? 'text-brand-primary'
+              : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          <FiBriefcase className={`h-4 w-4 transition-transform duration-200 ${isCompany ? 'scale-110' : ''}`} />
-          Company
+          <FiBriefcase className="h-4 w-4" />
+          <span>Company</span>
           {isCompany && (
-            <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/20 to-transparent opacity-50" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary"></div>
           )}
         </button>
 
         <button
           onClick={() => router.push('/dashboard/settings/billing')}
-          className={`group relative inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+          className={`flex items-center gap-2 px-1 py-3 text-sm font-medium transition-colors relative ${
             isBilling
-              ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30'
-              : 'bg-white text-gray-600 hover:text-brand-primary hover:bg-brand-tinted border border-gray-200'
+              ? 'text-brand-primary'
+              : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          <FiCreditCard className={`h-4 w-4 transition-transform duration-200 ${isBilling ? 'scale-110' : ''}`} />
-          Billing
-          <FiExternalLink className="h-3 w-3" />
+          <FiCreditCard className="h-4 w-4" />
+          <span>Billing</span>
           {isBilling && (
-            <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/20 to-transparent opacity-50" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary"></div>
           )}
         </button>
       </div>
