@@ -1,18 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Button from '@/components/ui/Button';
-import EditAnswerModal from '@/components/modals/EditAnswerModal';
-import { useRFP } from '@/hooks/useRFPs';
-import { FiArrowLeft, FiEdit2, FiLoader, FiChevronLeft, FiChevronRight, FiDownload, FiCopy, FiCheck, FiCalendar, FiHash } from 'react-icons/fi';
-import { format } from 'date-fns';
+import { useRFP, useUpdateAnswer } from '@/hooks/useRFPs';
+import { FiArrowLeft, FiLoader, FiCopy, FiCheck, FiDownload, FiRefreshCw, FiSave } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { createApiClient } from '@/lib/api-client';
 import { useAuth } from '@clerk/nextjs';
-import { RFPQuestion } from '@/types/models';
-
-const ITEMS_PER_PAGE = 25;
+import RichTextEditor from '@/components/editor/RichTextEditor';
+import ReactMarkdown from 'react-markdown';
 
 export default function RFPDetailPage() {
   const params = useParams();
@@ -20,21 +16,64 @@ export default function RFPDetailPage() {
   const rfpId = params.id as string;
   const { data: rfp, isLoading } = useRFP(rfpId);
   const { getToken } = useAuth();
+  const updateAnswer = useUpdateAnswer();
 
-  const [editingQuestion, setEditingQuestion] = useState<RFPQuestion | null>(null);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  const [editorContent, setEditorContent] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isRephrasing, setIsRephrasing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [rephraseInstruction, setRephraseInstruction] = useState('');
   const [rfpName, setRfpName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const questions = useMemo(() => rfp?.questions || [], [rfp?.questions]);
-  
-  const paginatedQuestions = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return questions.slice(start, start + ITEMS_PER_PAGE);
-  }, [questions, currentPage]);
+  const selectedQuestion = useMemo(
+    () => questions.find(q => q.id === selectedQuestionId),
+    [questions, selectedQuestionId]
+  );
 
-  const totalPages = Math.ceil(questions.length / ITEMS_PER_PAGE);
+  useEffect(() => {
+    if (questions.length > 0 && !selectedQuestionId) {
+      setSelectedQuestionId(questions[0].id);
+    }
+  }, [questions, selectedQuestionId]);
+
+  useEffect(() => {
+    if (selectedQuestion?.answer_text) {
+      setEditorContent(selectedQuestion.answer_text);
+      setHasUnsavedChanges(false);
+    }
+  }, [selectedQuestion?.id]);
+
+  useEffect(() => {
+    if (selectedQuestion && editorContent !== selectedQuestion.answer_text) {
+      setHasUnsavedChanges(true);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+  }, [editorContent, selectedQuestion]);
+
+  const handleSave = async () => {
+    if (!selectedQuestion || !hasUnsavedChanges) return;
+    
+    setIsSaving(true);
+    try {
+      await updateAnswer.mutateAsync({
+        rfpId,
+        questionId: selectedQuestion.id,
+        answerText: editorContent,
+      });
+      toast.success('Answer saved');
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      toast.error('Failed to save answer');
+      console.error(error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleSaveRfpName = async () => {
     if (!rfpName.trim() || rfpName === rfp?.rfp_name) {
@@ -53,11 +92,34 @@ export default function RFPDetailPage() {
     }
   };
 
-  const handleCopyAnswer = async (answer: string, id: string) => {
-    await navigator.clipboard.writeText(answer);
-    setCopiedId(id);
-    toast.success('Answer copied to clipboard');
-    setTimeout(() => setCopiedId(null), 2000);
+  const handleCopy = async () => {
+    if (!editorContent) return;
+    await navigator.clipboard.writeText(editorContent);
+    setCopied(true);
+    toast.success('Answer copied');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRephrase = async () => {
+    if (!selectedQuestion || !editorContent || !rephraseInstruction.trim()) return;
+    
+    setIsRephrasing(true);
+    try {
+      const apiClient = createApiClient(getToken);
+      const response = await apiClient.post(`/api/rfps/${rfpId}/questions/${selectedQuestion.id}/rephrase`, {
+        current_answer: editorContent,
+        instruction: rephraseInstruction,
+      });
+      
+      setEditorContent(response.data.rephrased_answer);
+      toast.success('Answer rephrased');
+      setRephraseInstruction('');
+    } catch (error) {
+      toast.error('Failed to rephrase');
+      console.error(error);
+    } finally {
+      setIsRephrasing(false);
+    }
   };
 
   const handleExport = async (format: 'xlsx' | 'docx' | 'pdf') => {
@@ -76,30 +138,11 @@ export default function RFPDetailPage() {
       link.remove();
       
       toast.success(`Exported as ${format.toUpperCase()}`);
-    } catch (error: unknown) {
-      toast.error('Failed to export RFP');
-      console.error('Export error:', error);
+    } catch (error) {
+      toast.error('Failed to export');
+      console.error(error);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <FiLoader className="h-8 w-8 text-brand-primary animate-spin" />
-      </div>
-    );
-  }
-
-  if (!rfp) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">RFP Not Found</h2>
-        <Button variant="outline" onClick={() => router.push('/dashboard/rfps')}>
-          Back to RFPs
-        </Button>
-      </div>
-    );
-  }
 
   const getTrustScore = (score: number) => {
     if (score > 1) return Math.min(Math.round(score), 100);
@@ -108,202 +151,228 @@ export default function RFPDetailPage() {
 
   const getTrustColor = (score: number) => {
     const normalizedScore = getTrustScore(score);
-    if (normalizedScore >= 90) return 'text-green-600 bg-green-50 border-green-200';
-    if (normalizedScore >= 85) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (normalizedScore >= 90) return 'bg-green-500';
+    if (normalizedScore >= 85) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
-  return (
-    <>
-      <div className="p-8 px-16 space-y-6">
-        <div className="bg-gradient-to-r from-brand-primary/10 via-purple-600/10 to-pink-600/10 rounded-2xl p-6 border border-brand-primary/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/dashboard/rfps')}
-                className="p-2 hover:bg-white/50 rounded-xl transition-colors"
-              >
-                <FiArrowLeft className="h-5 w-5 text-gray-700" />
-              </button>
-              <div>
-                {isEditingName ? (
-                  <input
-                    type="text"
-                    value={rfpName}
-                    onChange={(e) => setRfpName(e.target.value)}
-                    onBlur={handleSaveRfpName}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSaveRfpName();
-                      if (e.key === 'Escape') setIsEditingName(false);
-                    }}
-                    className="text-2xl font-semibold text-gray-900 border-b-2 border-brand-primary focus:outline-none bg-transparent"
-                    autoFocus
-                  />
-                ) : (
-                  <h1
-                    className="text-2xl font-semibold bg-gradient-to-r from-brand-primary to-purple-600 bg-clip-text text-transparent cursor-pointer hover:from-purple-600 hover:to-brand-primary transition-all"
-                    onClick={() => {
-                      setRfpName(rfp.rfp_name);
-                      setIsEditingName(true);
-                    }}
-                  >
-                    {rfp.rfp_name}
-                  </h1>
-                )}
-                <div className="flex items-center gap-4 mt-2">
-                  <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                    <FiCalendar className="h-4 w-4 text-brand-primary" />
-                    <span>{rfp.created_at ? format(new Date(rfp.created_at), 'MMM d, yyyy') : 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                    <FiHash className="h-4 w-4 text-brand-primary" />
-                    <span>{questions.length} questions</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+  const getTrustTextColor = (score: number) => {
+    const normalizedScore = getTrustScore(score);
+    if (normalizedScore >= 90) return 'text-green-600';
+    if (normalizedScore >= 85) return 'text-yellow-600';
+    return 'text-red-600';
+  };
 
-            <div className="flex items-center gap-3">
-              {rfp.status === 'processing' && (
-                <span className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200">
-                  <FiLoader className="h-4 w-4 animate-spin" />
-                  Processing
-                </span>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <FiLoader className="h-6 w-6 text-brand-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (!rfp) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h2 className="text-lg font-medium text-gray-900 mb-3">RFP Not Found</h2>
+        <button
+          onClick={() => router.push('/dashboard/rfps')}
+          className="text-sm text-gray-600 hover:text-brand-primary"
+        >
+          ← Back to RFPs
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-screen">
+      <div className="px-8 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/dashboard/rfps')}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              <FiArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              {isEditingName ? (
+                <input
+                  type="text"
+                  value={rfpName}
+                  onChange={(e) => setRfpName(e.target.value)}
+                  onBlur={handleSaveRfpName}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveRfpName();
+                    if (e.key === 'Escape') setIsEditingName(false);
+                  }}
+                  className="text-lg font-medium text-gray-900 border-b-2 border-brand-primary focus:outline-none bg-transparent"
+                  autoFocus
+                />
+              ) : (
+                <h1
+                  className="text-lg font-medium text-gray-900 cursor-pointer hover:text-brand-primary"
+                  onClick={() => {
+                    setRfpName(rfp.rfp_name);
+                    setIsEditingName(true);
+                  }}
+                >
+                  {rfp.rfp_name}
+                </h1>
               )}
-              <div className="relative group">
-                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl bg-white border border-gray-200 hover:border-brand-primary transition-colors">
-                  <FiDownload className="h-4 w-4" />
-                  Export
+              <p className="text-sm text-gray-500 mt-0.5">
+                {questions.length} questions
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {rfp.status === 'processing' && (
+              <span className="flex items-center gap-2 text-sm text-gray-600">
+                <FiLoader className="h-4 w-4 animate-spin" />
+                Processing
+              </span>
+            )}
+            <div className="relative group">
+              <button className="text-sm text-gray-700 hover:text-brand-primary flex items-center gap-2">
+                <FiDownload className="h-4 w-4" />
+                Export
+              </button>
+              <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-lg border border-gray-200 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 overflow-hidden">
+                <button
+                  onClick={() => handleExport('xlsx')}
+                  className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50"
+                >
+                  Excel
                 </button>
-                <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl border border-gray-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 overflow-hidden">
-                  <button
-                    onClick={() => handleExport('xlsx')}
-                    className="w-full px-4 py-3 text-sm text-left hover:bg-brand-primary/5 hover:text-brand-primary transition-colors"
-                  >
-                    Excel
-                  </button>
-                  <button
-                    onClick={() => handleExport('docx')}
-                    className="w-full px-4 py-3 text-sm text-left hover:bg-brand-primary/5 hover:text-brand-primary transition-colors"
-                  >
-                    Word
-                  </button>
-                  <button
-                    onClick={() => handleExport('pdf')}
-                    className="w-full px-4 py-3 text-sm text-left hover:bg-brand-primary/5 hover:text-brand-primary transition-colors"
-                  >
-                    PDF
-                  </button>
-                </div>
+                <button
+                  onClick={() => handleExport('docx')}
+                  className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50"
+                >
+                  Word
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50"
+                >
+                  PDF
+                </button>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">#</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider w-1/4">Question</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider">Answer</th>
-                <th className="text-center py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider w-24">Trust</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {paginatedQuestions.map((question, index) => {
-                const trustScore = getTrustScore(question.trust_score);
-                const trustColorClass = getTrustColor(question.trust_score);
-                const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
-
-                return (
-                  <tr key={question.id} className="group hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-6 text-sm text-gray-500 font-medium">{globalIndex}</td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm text-gray-900 font-medium">
+      <div className="flex flex-1 overflow-hidden">
+        <aside className="w-96 overflow-y-auto">
+          <div className="p-4">
+            {questions.map((question, index) => {
+              const trustScore = getTrustScore(question.trust_score);
+              const isSelected = selectedQuestionId === question.id;
+              
+              return (
+                <button
+                  key={question.id}
+                  onClick={() => setSelectedQuestionId(question.id)}
+                  className={`w-full text-left p-3 rounded-tr-4xl rounded-br-4xl mb-2 transition-colors ${
+                    isSelected
+                      ? 'bg-brand-primary/10 border-l-4 border-brand-primary'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className={`text-sm font-medium mt-0.5 ${isSelected ? 'text-brand-primary' : 'text-gray-400'}`}>
+                      {index + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-base leading-relaxed mb-2 ${isSelected ? 'text-gray-900 font-medium' : 'text-gray-700'}`}>
                         {question.question_text}
                       </p>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="relative">
-                        <div 
-                          onClick={() => setEditingQuestion(question)}
-                          className="p-3 border-2 border-gray-200 rounded-lg bg-gray-50/50 cursor-pointer hover:border-brand-primary hover:bg-white transition-all group/answer"
-                        >
-                          <div className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
-                            {question.answer_text || <span className="text-gray-400 italic">Click to add answer</span>}
-                          </div>
-                          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover/answer:opacity-100 transition-opacity">
-                            {question.answer_text && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCopyAnswer(question.answer_text!, question.id);
-                                }}
-                                className="p-1.5 bg-white hover:bg-gray-100 rounded-md shadow-sm border border-gray-200"
-                              >
-                                {copiedId === question.id ? (
-                                  <FiCheck className="h-3.5 w-3.5 text-green-600" />
-                                ) : (
-                                  <FiCopy className="h-3.5 w-3.5 text-gray-600" />
-                                )}
-                              </button>
-                            )}
-                            <button className="p-1.5 bg-white hover:bg-brand-primary/10 rounded-md shadow-sm border border-gray-200">
-                              <FiEdit2 className="h-3.5 w-3.5 text-brand-primary" />
-                            </button>
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${getTrustColor(question.trust_score)}`} />
+                        <span className={`text-xs font-medium ${getTrustTextColor(question.trust_score)}`}>
+                          {trustScore}%
+                        </span>
                       </div>
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      <span className={`inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg border-2 ${trustColorClass}`}>
-                        {trustScore}%
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <p className="text-sm text-gray-600">
-                Showing <span className="font-medium text-brand-primary">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-brand-primary">{Math.min(currentPage * ITEMS_PER_PAGE, questions.length)}</span> of <span className="font-medium text-brand-primary">{questions.length}</span> results
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-gray-200 hover:bg-white hover:border-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <FiChevronLeft className="h-5 w-5" />
+                    </div>
+                  </div>
                 </button>
-                <span className="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-200">
-                  {currentPage} / {totalPages}
-                </span>
+              );
+            })}
+          </div>
+        </aside>
+
+        <main className="flex-1 overflow-y-auto px-8 py-6">
+          {selectedQuestion ? (
+            <div className="max-w-4xl">
+              <div className="mb-6 flex items-start justify-between">
+                <h2 className="text-2xl font-semibold text-gray-900 flex-1">
+                  {selectedQuestion.question_text}
+                </h2>
+                <div className="flex items-center gap-2 ml-4">
+                  <button
+                    onClick={handleCopy}
+                    disabled={!editorContent}
+                    className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Copy answer"
+                  >
+                    {copied ? <FiCheck className="h-5 w-5" /> : <FiCopy className="h-5 w-5" />}
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={!hasUnsavedChanges || isSaving}
+                    className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors ${
+                      hasUnsavedChanges
+                        ? 'bg-brand-primary text-white hover:bg-brand-primary/90'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <FiSave className="h-4 w-4" />
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+
+              <RichTextEditor
+                content={editorContent}
+                onChange={setEditorContent}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-sm text-gray-400">Select a question to view and edit</p>
+            </div>
+          )}
+        </main>
+
+        <aside className="w-80 overflow-y-auto px-6 py-6">
+          {selectedQuestion && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FiRefreshCw className="h-4 w-4" />
+                  AI rephrase
+                </label>
+                <textarea
+                  value={rephraseInstruction}
+                  onChange={(e) => setRephraseInstruction(e.target.value)}
+                  placeholder="How would you like to rephrase this answer?"
+                  className="w-full h-32 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-primary resize-none"
+                  disabled={!editorContent}
+                />
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-gray-200 hover:bg-white hover:border-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={handleRephrase}
+                  disabled={isRephrasing || !rephraseInstruction.trim() || !editorContent}
+                  className="w-full px-4 py-2 text-sm bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FiChevronRight className="h-5 w-5" />
+                  {isRephrasing ? 'Rephrasing...' : 'Rephrase'}
                 </button>
               </div>
             </div>
           )}
-        </div>
+        </aside>
       </div>
-
-      {editingQuestion && (
-        <EditAnswerModal
-          isOpen={true}
-          onClose={() => setEditingQuestion(null)}
-          question={editingQuestion}
-          rfpId={rfpId}
-        />
-      )}
-    </>
+    </div>
   );
 }
