@@ -58,7 +58,7 @@ export default function SignUpPage() {
       <div className="relative z-10 w-full max-w-md px-4">
         <div className="mb-10 mt-6 text-center">
           <h1 className="text-4xl font-light mb-4 bg-gradient-to-r from-brand-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            RFPGen
+            ScaleRFP
           </h1>
           <h2 className="text-2xl font-light text-gray-800">Create your account</h2>
         </div>
@@ -87,7 +87,7 @@ export default function SignUpPage() {
   routing="path"
   path="/auth/sign-up"
   signInUrl="/auth/sign-in"
-  forceRedirectUrl="/dashboard"
+  forceRedirectUrl="/onboarding"
 />
       </div>
     </div>

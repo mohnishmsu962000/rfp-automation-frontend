@@ -6,7 +6,7 @@ import QueryProvider from '@/providers/query-provider';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
-  title: "RFPGen - AI-Powered RFP Automation",
+  title: "ScaleRFP - AI-Powered RFP Automation",
   description: "Automate RFP responses with AI",
 };
 

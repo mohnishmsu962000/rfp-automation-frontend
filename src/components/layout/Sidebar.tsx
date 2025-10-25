@@ -39,7 +39,7 @@ export default function Sidebar() {
           <div className="w-4 h-4 border-2 border-white rounded"></div>
         </div>
         <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-          RFPGen
+          ScaleRFP
         </div>
       </Link>
       
