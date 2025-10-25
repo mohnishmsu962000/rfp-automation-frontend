@@ -72,7 +72,7 @@ export default function OnboardingPage() {
           <h1 className="text-4xl font-light mb-3 bg-gradient-to-r from-brand-primary via-purple-500 to-pink-500 bg-clip-text text-transparent text-center">
             Welcome to ScaleRFP
           </h1>
-          <p className="text-center text-gray-600 font-light">Let's get your workspace set up</p>
+          <p className="text-center text-gray-600 font-light">Let&apos;s get your workspace set up</p>
         </div>
         
         <div className="bg-white/90 backdrop-blur-xl shadow-2xl border border-white/50 rounded-3xl p-10">
