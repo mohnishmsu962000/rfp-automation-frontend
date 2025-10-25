@@ -59,7 +59,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-5xl md:text-3xl font-medium mb-3 bg-gradient-to-r from-brand-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    Welcome to RFPGen, {firstName}! 👋
+                    Welcome to ScaleRFP, {firstName}! 👋
                   </h1>
                   <p className="text-lg text-gray-600">
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}

@@ -1,8 +1,7 @@
-'use client';
-
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import { Markdown } from 'tiptap-markdown';
 import { useEffect } from 'react';
 import { FiBold, FiItalic, FiList, FiCode } from 'react-icons/fi';
 
@@ -20,6 +19,7 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
           levels: [1, 2, 3],
         },
       }),
+      Markdown,
       Placeholder.configure({
         placeholder: 'Start typing your answer...',
       }),
