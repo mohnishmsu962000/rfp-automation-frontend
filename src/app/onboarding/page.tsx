@@ -12,7 +12,7 @@ export default function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { getToken } = useAuth();
   const router = useRouter();
-  const { createOrganization } = useOrganizationList();
+  const { createOrganization, setActive } = useOrganizationList();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +31,12 @@ export default function OnboardingPage() {
       const org = await createOrganization({ name: companyName });
       
       console.log('Clerk organization created:', org.id);
+      
+      if (setActive) {
+        await setActive({ organization: org.id });
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const apiClient = createApiClient(getToken);
       await apiClient.patch('/api/users/me', {
