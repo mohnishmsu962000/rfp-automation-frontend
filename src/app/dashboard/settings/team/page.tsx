@@ -4,6 +4,7 @@ import { useOrganization } from '@clerk/nextjs';
 import { useState } from 'react';
 import { FiUserPlus, FiMail, FiTrash2 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import type { OrganizationInvitationResource } from '@clerk/types';
 
 export default function TeamPage() {
   const { organization, memberships, invitations } = useOrganization({
@@ -68,7 +69,7 @@ export default function TeamPage() {
     }
   };
 
-  const handleRevokeInvitation = async (invitation: any) => {
+  const handleRevokeInvitation = async (invitation: OrganizationInvitationResource) => {
     try {
       await invitation.revoke();
       toast.success('Invitation revoked');
