@@ -57,17 +57,17 @@ export default function UploadDocumentModal({ isOpen, onClose }: UploadDocumentM
       const failed = data.failed || [];
       
       setUploadResults({
-        success: uploaded.map((u: any) => u.filename),
-        failed: failed.map((f: any) => f.filename)
+        success: uploaded.map((u: {filename: string}) => u.filename),
+        failed: failed.map((f: {filename: string}) => f.filename)
       });
-
+    
       if (uploaded.length > 0) {
         toast.success(`${uploaded.length} document(s) uploaded successfully`);
       }
       if (failed.length > 0) {
         toast.error(`${failed.length} document(s) failed to upload`);
       }
-
+    
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['usage-stats'] });
       
