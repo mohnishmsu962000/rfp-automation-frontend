@@ -29,8 +29,13 @@ export default function DashboardPage() {
   const completedRFPs = rfps?.filter(r => r.status === 'completed') || [];
   const processingRFPs = rfps?.filter(r => r.status === 'processing') || [];
   const allQuestions = completedRFPs.flatMap(rfp => rfp.questions || []);
+  const getTrustScore = (score: number) => {
+    if (score > 1) return Math.min(Math.round(score), 100);
+    return Math.min(Math.round(score * 100), 100);
+  };
+  
   const avgTrust = allQuestions.length > 0
-    ? Math.round(allQuestions.reduce((sum, q) => sum + (q.trust_score || 0), 0) / allQuestions.length * 100)
+    ? Math.round(allQuestions.reduce((sum, q) => sum + getTrustScore(q.trust_score || 0), 0) / allQuestions.length)
     : 0;
 
   const recentDocs = documents?.slice(0, 3) || [];
@@ -120,7 +125,7 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-3xl font-medium text-gray-900 mb-1">{documents?.length || 0}</h3>
               <p className="text-sm text-gray-600 font-medium">Documents</p>
-              <p className="text-xs text-gray-500 mt-1">{usage?.documents.remaining || 0} remaining</p>
+              <p className="text-xs text-gray-500 mt-1">{usage?.docs.remaining || 0} remaining</p>
             </div>
 
             <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-md transition-shadow">
@@ -141,7 +146,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <h3 className="text-3xl font-medium text-gray-900 mb-1">
-                {Math.round((usage?.documents.used || 0) / (usage?.documents.limit || 1) * 100)}%
+                {Math.round((usage?.docs.used || 0) / (usage?.docs.limit || 1) * 100)}%
               </h3>
               <p className="text-sm text-gray-600 font-medium">Quota Usage</p>
               <p className="text-xs text-gray-500 mt-1">Document uploads</p>
