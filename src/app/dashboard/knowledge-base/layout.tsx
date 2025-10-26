@@ -27,7 +27,7 @@ export default function KnowledgeBaseLayout({
           <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-gray-200 shadow-sm">
             <FiFile className="h-4 w-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-700">
-              {stats.documents.used} / {stats.documents.limit}
+              {stats.docs.used} / {stats.docs.limit}
             </span>
             <span className="text-xs text-gray-500">documents</span>
           </div>
