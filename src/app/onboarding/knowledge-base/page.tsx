@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
 import { createApiClient } from '@/lib/api-client';
-import { FiUpload, FiLoader, FiArrowRight } from 'react-icons/fi';
+import { FiUpload, FiLoader, FiArrowRight, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { useDropzone } from 'react-dropzone';
 
 export default function KnowledgeBasePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadResults, setUploadResults] = useState<{success: string[], failed: string[]}>({success: [], failed: []});
   const { getToken } = useAuth();
   const router = useRouter();
 
@@ -38,23 +39,45 @@ export default function KnowledgeBasePage() {
     }
 
     setIsUploading(true);
+    setUploadResults({success: [], failed: []});
+    
     try {
       const apiClient = createApiClient(getToken);
+      const formData = new FormData();
       
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('doc_type', 'PROPOSAL');
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+      formData.append('doc_type', 'PROPOSAL');
 
-        await apiClient.post('/api/documents/', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+      const response = await apiClient.post('/api/documents/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const uploaded = response.data.uploaded || [];
+      const failed = response.data.failed || [];
+      
+      setUploadResults({
+        success: uploaded.map((u: any) => u.filename),
+        failed: failed.map((f: any) => f.filename)
+      });
+
+      if (uploaded.length > 0) {
+        toast.success(`${uploaded.length} document(s) uploaded successfully!`);
+      }
+      
+      if (failed.length > 0) {
+        toast.error(`${failed.length} document(s) failed to upload`);
       }
 
-      toast.success('Documents uploaded successfully!');
-      router.push('/dashboard');
+      if (uploaded.length > 0) {
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+      }
+      
     } catch (error) {
       toast.error('Failed to upload documents');
       console.error(error);
@@ -119,7 +142,7 @@ export default function KnowledgeBasePage() {
             <p className="text-base text-gray-700 font-light mb-2">
               {isDragActive ? 'Drop files here' : 'Drag and drop files here, or click to browse'}
             </p>
-            <p className="text-sm text-gray-500 font-light">PDF, DOCX, or TXT files</p>
+            <p className="text-sm text-gray-500 font-light">PDF, DOCX, or TXT files (multiple files allowed)</p>
           </div>
 
           {files.length > 0 && (
@@ -127,9 +150,16 @@ export default function KnowledgeBasePage() {
               {files.map((file, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="text-sm text-gray-700 font-light truncate flex-1">{file.name}</span>
+                  {uploadResults.success.includes(file.name) && (
+                    <FiCheckCircle className="text-green-500 mr-2" />
+                  )}
+                  {uploadResults.failed.includes(file.name) && (
+                    <FiXCircle className="text-red-500 mr-2" />
+                  )}
                   <button
                     onClick={() => removeFile(index)}
-                    className="text-red-500 hover:text-red-700 text-sm font-light ml-4"
+                    disabled={isUploading}
+                    className="text-red-500 hover:text-red-700 text-sm font-light ml-4 disabled:opacity-50"
                   >
                     Remove
                   </button>
@@ -154,7 +184,7 @@ export default function KnowledgeBasePage() {
               {isUploading ? (
                 <>
                   <FiLoader className="h-5 w-5 animate-spin" />
-                  Uploading...
+                  Uploading {files.length} file(s)...
                 </>
               ) : (
                 <>

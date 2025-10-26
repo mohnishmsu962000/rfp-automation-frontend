@@ -3,12 +3,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useRFP, useUpdateAnswer } from '@/hooks/useRFPs';
+import { useQueryClient } from '@tanstack/react-query';
 import { FiArrowLeft, FiLoader, FiCopy, FiCheck, FiDownload, FiRefreshCw, FiSave } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { createApiClient } from '@/lib/api-client';
 import { useAuth } from '@clerk/nextjs';
 import RichTextEditor from '@/components/editor/RichTextEditor';
-import ReactMarkdown from 'react-markdown';
 
 export default function RFPDetailPage() {
   const params = useParams();
@@ -17,6 +17,7 @@ export default function RFPDetailPage() {
   const { data: rfp, isLoading } = useRFP(rfpId);
   const { getToken } = useAuth();
   const updateAnswer = useUpdateAnswer();
+  const queryClient = useQueryClient();
 
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState('');
@@ -33,6 +34,24 @@ export default function RFPDetailPage() {
     () => questions.find(q => q.id === selectedQuestionId),
     [questions, selectedQuestionId]
   );
+
+  useEffect(() => {
+    if (!rfp) return;
+
+    if (rfp.status === 'processing' || rfp.status === 'pending') {
+      const interval = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ['rfp', rfpId] });
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }
+  }, [rfp?.status, rfpId, queryClient]);
+
+  useEffect(() => {
+    if (rfp && rfp.status === 'completed' && questions.length > 0) {
+      toast.success('RFP processing completed!');
+    }
+  }, [rfp?.status, questions.length]);
 
   useEffect(() => {
     if (questions.length > 0 && !selectedQuestionId) {
@@ -228,10 +247,16 @@ export default function RFPDetailPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {rfp.status === 'processing' && (
-              <span className="flex items-center gap-2 text-sm text-gray-600">
+            {(rfp.status === 'processing' || rfp.status === 'pending') && (
+              <span className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
                 <FiLoader className="h-4 w-4 animate-spin" />
                 Processing
+              </span>
+            )}
+            {rfp.status === 'completed' && (
+              <span className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
+                <FiCheck className="h-4 w-4" />
+                Completed
               </span>
             )}
             <div className="relative group">
