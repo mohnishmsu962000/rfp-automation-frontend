@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { FiUser, FiBriefcase, FiCreditCard } from 'react-icons/fi';
+import { FiUser, FiBriefcase, FiUsers, FiCreditCard } from 'react-icons/fi';
 
 export default function SettingsLayout({
   children,
@@ -13,6 +13,7 @@ export default function SettingsLayout({
 
   const isProfile = pathname.includes('/profile');
   const isCompany = pathname.includes('/company');
+  const isTeam = pathname.includes('/team');
   const isBilling = pathname.includes('/billing');
 
   return (
@@ -50,6 +51,21 @@ export default function SettingsLayout({
           <FiBriefcase className="h-4 w-4" />
           <span>Company</span>
           {isCompany && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary"></div>
+          )}
+        </button>
+
+        <button
+          onClick={() => router.push('/dashboard/settings/team')}
+          className={`flex items-center gap-2 px-1 py-3 text-sm font-medium transition-colors relative ${
+            isTeam
+              ? 'text-brand-primary'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <FiUsers className="h-4 w-4" />
+          <span>Team</span>
+          {isTeam && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary"></div>
           )}
         </button>
