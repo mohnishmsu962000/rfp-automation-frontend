@@ -1,18 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useOrganizationList } from '@clerk/nextjs';
+import { useAuth, useOrganization, useOrganizationList } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
 import { createApiClient } from '@/lib/api-client';
 import { FiArrowRight, FiLoader } from 'react-icons/fi';
 
 export default function OnboardingPage() {
   const [companyName, setCompanyName] = useState('');
+  const [rfpsPerMonth, setRfpsPerMonth] = useState('');
+  const [teamSize, setTeamSize] = useState('');
+  const [industry, setIndustry] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { getToken } = useAuth();
   const router = useRouter();
-  const { createOrganization, setActive } = useOrganizationList();
+  const { organization } = useOrganization();
+  const { userMemberships } = useOrganizationList({ userMemberships: { infinite: true } });
+
+  useEffect(() => {
+
+    if (organization?.name) {
+      setCompanyName(organization.name);
+    }
+  }, [organization]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,31 +35,29 @@ export default function OnboardingPage() {
   
     setIsSubmitting(true);
     try {
-      if (!createOrganization) {
-        throw new Error('Organization creation not available');
+
+      const orgId = organization?.id || userMemberships?.data?.[0]?.organization?.id;
+      
+      if (!orgId) {
+        throw new Error('No organization found. Please contact support.');
       }
       
-      const org = await createOrganization({ name: companyName });
-      
-      console.log('Clerk organization created:', org.id);
-      
-      if (setActive) {
-        await setActive({ organization: org.id });
-      }
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       const apiClient = createApiClient(getToken);
       await apiClient.patch('/api/users/me', {
         company_name: companyName,
-        clerk_organization_id: org.id
+        clerk_organization_id: orgId,
+        rfps_per_month: rfpsPerMonth,
+        team_size: teamSize,
+        industry: industry
       });
       
-      toast.success('Company created successfully!');
+      toast.success('Company profile created!');
       router.push('/onboarding/knowledge-base');
       
     } catch (error) {
-      toast.error('Failed to create company');
+      toast.error('Failed to create company profile');
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -91,24 +100,85 @@ export default function OnboardingPage() {
         <div className="bg-white/90 backdrop-blur-xl shadow-2xl border border-white/50 rounded-3xl p-10">
           <div className="mb-8">
             <h2 className="text-2xl font-medium text-gray-900 mb-2">Company Information</h2>
-            <p className="text-sm text-gray-500 font-light">Tell us about your organization</p>
+            <p className="text-sm text-gray-500 font-light">Help us understand your needs</p>
           </div>
           
-          <form onSubmit={handleSubmit}>
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Company Name
               </label>
               <input
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all font-light text-base"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all"
                 placeholder="e.g., Acme Corporation"
                 required
                 disabled={isSubmitting}
-                autoFocus
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Industry
+              </label>
+              <select
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                required
+                disabled={isSubmitting}
+              >
+                <option value="">Select industry</option>
+                <option value="technology">Technology</option>
+                <option value="consulting">Consulting</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="finance">Finance</option>
+                <option value="education">Education</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                RFPs per month
+              </label>
+              <select
+                value={rfpsPerMonth}
+                onChange={(e) => setRfpsPerMonth(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                required
+                disabled={isSubmitting}
+              >
+                <option value="">Select range</option>
+                <option value="1-5">1-5</option>
+                <option value="6-10">6-10</option>
+                <option value="11-20">11-20</option>
+                <option value="21-50">21-50</option>
+                <option value="50+">50+</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Team size
+              </label>
+              <select
+                value={teamSize}
+                onChange={(e) => setTeamSize(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                required
+                disabled={isSubmitting}
+              >
+                <option value="">Select size</option>
+                <option value="1-10">1-10</option>
+                <option value="11-50">11-50</option>
+                <option value="51-200">51-200</option>
+                <option value="201-500">201-500</option>
+                <option value="500+">500+</option>
+              </select>
             </div>
             
             <button
