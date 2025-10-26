@@ -6,7 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { createApiClient } from '@/lib/api-client';
-import { FiUpload, FiX } from 'react-icons/fi';
+import { FiUpload, FiX, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { toast } from 'sonner';
 
 interface UploadDocumentModalProps {
@@ -17,21 +17,25 @@ interface UploadDocumentModalProps {
 export default function UploadDocumentModal({ isOpen, onClose }: UploadDocumentModalProps) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [docType, setDocType] = useState<'proposal' | 'contract' | 'report' | 'presentation' | 'other'>('other');
   const [tags, setTags] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadResults, setUploadResults] = useState<{success: string[], failed: string[]}>({success: [], failed: []});
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
-      if (!file) throw new Error('No file selected');
+      if (files.length === 0) throw new Error('No files selected');
 
       const token = await getToken();
       console.log('Token:', token);
       
       const apiClient = createApiClient(getToken);
       const formData = new FormData();
-      formData.append('file', file);
+      
+      files.forEach(file => {
+        formData.append('files', file);
+      });
       formData.append('doc_type', docType.toUpperCase());
       formData.append('tags', tags);
 
@@ -48,54 +52,77 @@ export default function UploadDocumentModal({ isOpen, onClose }: UploadDocumentM
       });
       return data;
     },
-    onSuccess: () => {
-      toast.success('Document uploaded successfully');
+    onSuccess: (data) => {
+      const uploaded = data.uploaded || [];
+      const failed = data.failed || [];
+      
+      setUploadResults({
+        success: uploaded.map((u: any) => u.filename),
+        failed: failed.map((f: any) => f.filename)
+      });
+
+      if (uploaded.length > 0) {
+        toast.success(`${uploaded.length} document(s) uploaded successfully`);
+      }
+      if (failed.length > 0) {
+        toast.error(`${failed.length} document(s) failed to upload`);
+      }
+
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['usage-stats'] });
-      handleClose();
+      
+      if (failed.length === 0) {
+        setTimeout(handleClose, 2000);
+      }
     },
     onError: (error: unknown) => {
-      console.error('Error uploading document:', error);
-      toast.error('Failed to upload document');
+      console.error('Error uploading documents:', error);
+      toast.error('Failed to upload documents');
       setUploadProgress(0);
     },
   });
 
   const handleClose = () => {
-    setFile(null);
+    setFiles([]);
     setDocType('other');
     setTags('');
     setUploadProgress(0);
+    setUploadResults({success: [], failed: []});
     onClose();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files));
     }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) {
-      toast.error('Please select a file');
+    if (files.length === 0) {
+      toast.error('Please select at least one file');
       return;
     }
     uploadMutation.mutate();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Upload Document" size="md">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Upload Documents" size="md">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Document File
+            Document Files
           </label>
           <div className="relative">
             <input
               type="file"
               onChange={handleFileChange}
               accept=".pdf,.doc,.docx,.txt"
+              multiple
               className="hidden"
               id="file-upload"
               disabled={uploadMutation.isPending}
@@ -107,23 +134,38 @@ export default function UploadDocumentModal({ isOpen, onClose }: UploadDocumentM
               <div className="text-center">
                 <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
                 <p className="mt-2 text-sm text-gray-600">
-                  {file ? file.name : 'Click to upload or drag and drop'}
+                  {files.length > 0 ? `${files.length} file(s) selected` : 'Click to upload or drag and drop'}
                 </p>
                 <p className="mt-1 text-xs text-gray-500">
-                  PDF, DOC, DOCX, TXT up to 10MB
+                  PDF, DOC, DOCX, TXT up to 10MB (multiple files allowed)
                 </p>
               </div>
             </label>
-            {file && (
-              <button
-                type="button"
-                onClick={() => setFile(null)}
-                className="absolute top-2 right-2 p-2 bg-white rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <FiX className="h-4 w-4 text-gray-600" />
-              </button>
-            )}
           </div>
+
+          {files.length > 0 && (
+            <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+              {files.map((file, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm text-gray-700 truncate flex-1">{file.name}</span>
+                  {uploadResults.success.includes(file.name) && (
+                    <FiCheckCircle className="text-green-500 mr-2" />
+                  )}
+                  {uploadResults.failed.includes(file.name) && (
+                    <FiXCircle className="text-red-500 mr-2" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    disabled={uploadMutation.isPending}
+                    className="p-1 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
+                  >
+                    <FiX className="h-4 w-4 text-gray-600" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -157,14 +199,14 @@ export default function UploadDocumentModal({ isOpen, onClose }: UploadDocumentM
             disabled={uploadMutation.isPending}
           />
           <p className="mt-1 text-xs text-gray-500">
-            Add relevant tags to help organize and find this document
+            Add relevant tags to help organize and find these documents
           </p>
         </div>
 
         {uploadProgress > 0 && uploadProgress < 100 && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Uploading...</span>
+              <span className="text-sm font-medium text-gray-700">Uploading {files.length} file(s)...</span>
               <span className="text-sm text-gray-600">{uploadProgress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -189,10 +231,10 @@ export default function UploadDocumentModal({ isOpen, onClose }: UploadDocumentM
             type="submit"
             variant="primary"
             isLoading={uploadMutation.isPending}
-            disabled={!file || uploadMutation.isPending}
+            disabled={files.length === 0 || uploadMutation.isPending}
           >
             <FiUpload className="mr-2 h-4 w-4" />
-            Upload Document
+            Upload {files.length > 0 ? `${files.length} Document(s)` : 'Documents'}
           </Button>
         </div>
       </form>
