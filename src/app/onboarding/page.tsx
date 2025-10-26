@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useOrganizationList } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
 import { createApiClient } from '@/lib/api-client';
 import { FiArrowRight, FiLoader } from 'react-icons/fi';
@@ -12,6 +12,7 @@ export default function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { getToken } = useAuth();
   const router = useRouter();
+  const { createOrganization } = useOrganizationList();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,19 +24,25 @@ export default function OnboardingPage() {
   
     setIsSubmitting(true);
     try {
+      if (!createOrganization) {
+        throw new Error('Organization creation not available');
+      }
+      
+      const org = await createOrganization({ name: companyName });
+      
+      console.log('Clerk organization created:', org.id);
+      
       const apiClient = createApiClient(getToken);
-      const response = await apiClient.patch('/api/users/me', {
-        company_name: companyName
+      await apiClient.patch('/api/users/me', {
+        company_name: companyName,
+        clerk_organization_id: org.id
       });
       
-      console.log('API Response:', response);
-      console.log('About to redirect...');
-      
+      toast.success('Company created successfully!');
       router.push('/onboarding/knowledge-base');
       
-      console.log('Router.push called');
     } catch (error) {
-      toast.error('Failed to save company name');
+      toast.error('Failed to create company');
       console.error(error);
     } finally {
       setIsSubmitting(false);
