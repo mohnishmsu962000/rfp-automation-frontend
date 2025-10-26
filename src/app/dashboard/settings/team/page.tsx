@@ -7,19 +7,20 @@ import { toast } from 'react-hot-toast';
 import type { OrganizationInvitationResource } from '@clerk/types';
 
 export default function TeamPage() {
-  const { organization, memberships, invitations } = useOrganization({
-    memberships: {
-      infinite: true,
-    },
-    invitations: {
-      infinite: true,
-    },
-  });
-
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'org:member' | 'org:admin'>('org:member');
-  const [isSending, setIsSending] = useState(false);
+    const { organization, memberships, invitations, membership: currentUserMembership } = useOrganization({
+        memberships: {
+          infinite: true,
+        },
+        invitations: {
+          infinite: true,
+        },
+      });
+    
+      const isAdmin = currentUserMembership?.role === 'org:admin';
+      const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+      const [inviteEmail, setInviteEmail] = useState('');
+      const [inviteRole, setInviteRole] = useState<'org:member' | 'org:admin'>('org:member');
+      const [isSending, setIsSending] = useState(false);
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) {
