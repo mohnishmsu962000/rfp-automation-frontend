@@ -119,7 +119,7 @@ export default function BillingPage() {
   const rfpRemaining = usage?.rfps?.remaining ?? (rfpLimit - rfpUsed);  const docUsed = usage?.docs?.used ?? 0;
   const docLimit = usage?.docs?.limit ?? 10;
   const docRemaining = usage?.docs?.remaining ?? (docLimit - docUsed);
-  
+
   const getRfpPercentage = () => (rfpUsed / rfpLimit) * 100;
   const getDocPercentage = () => (docUsed / docLimit) * 100;
 
@@ -193,8 +193,8 @@ export default function BillingPage() {
       </div>
 
       <div>
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Choose Your Plan</h2>
+        <div className="text-center mb-20 mt-20">
+          <h2 className="text-3xl font-medium text-gray-900 mb-2">Choose Your Plan</h2>
           <p className="text-gray-600">Select the perfect plan for your team</p>
         </div>
 
@@ -206,7 +206,7 @@ export default function BillingPage() {
             return (
               <div
                 key={planOption.tier}
-                className="relative rounded-xl border-2 p-6 bg-white transition-all hover:shadow-xl"
+                className="relative rounded-xl border border-gray-200 p-6 bg-white transition-all hover:shadow-xl"
               >
                 {isCurrentPlan && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -227,7 +227,7 @@ export default function BillingPage() {
 
                 <div className="mb-4">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-gray-900">₹{planOption.price.toLocaleString()}</span>
+                    <span className="text-4xl font-medium text-gray-900">₹{planOption.price.toLocaleString()}</span>
                     {planOption.price > 0 && <span className="text-gray-500">/month</span>}
                   </div>
                   <p className="text-sm text-gray-600 mt-2">{planOption.description}</p>
