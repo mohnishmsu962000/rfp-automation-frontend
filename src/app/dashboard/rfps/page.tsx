@@ -237,7 +237,7 @@ export default function RFPsPage() {
                             onClick={() => handleRFPClick(rfp.id)}
                             className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-brand-primary to-purple-600 hover:from-purple-600 hover:to-brand-primary rounded-lg transition-all shadow-md hover:shadow-lg"
                           >
-                            View
+                            Edit
                           </button>
                           <button
                             onClick={(e) => {

@@ -4,6 +4,7 @@ import "./globals.css";
 import Toast from '@/components/ui/Toast';
 import QueryProvider from '@/providers/query-provider';
 import { Toaster } from 'react-hot-toast';
+import { OrganizationProvider } from '@/providers/OrganizationProvider';
 
 export const metadata: Metadata = {
   title: "ScaleRFP - AI-Powered RFP Automation",
@@ -20,9 +21,11 @@ export default function RootLayout({
       <html lang="en">
         <body>
           <QueryProvider>
-            <Toaster position="top-right" />
-            {children}
-            <Toast />
+            <OrganizationProvider>
+              <Toaster position="top-right" />
+              {children}
+              <Toast />
+            </OrganizationProvider>
           </QueryProvider>
         </body>
       </html>

@@ -5,9 +5,8 @@ import Card from '@/components/ui/Card';
 
 export default function ProfilePage() {
   return (
-    <div className="space-y-6">
-      <Card>
-        <UserProfile 
+    <div>
+      <UserProfile 
           appearance={{
             elements: {
               rootBox: 'w-full',
@@ -15,7 +14,7 @@ export default function ProfilePage() {
             }
           }}
         />
-      </Card>
+    
     </div>
   );
 }
