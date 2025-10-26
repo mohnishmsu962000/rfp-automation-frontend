@@ -58,10 +58,10 @@ export default function KnowledgeBasePage() {
 
       const uploaded = response.data.uploaded || [];
       const failed = response.data.failed || [];
-      
+
       setUploadResults({
-        success: uploaded.map((u: any) => u.filename),
-        failed: failed.map((f: any) => f.filename)
+        success: uploaded.map((u: {filename: string}) => u.filename),
+        failed: failed.map((f: {filename: string}) => f.filename)
       });
 
       if (uploaded.length > 0) {
