@@ -11,6 +11,9 @@ import {
   HiOutlineQuestionMarkCircle
 } from 'react-icons/hi2';
 import { SignOutButton } from '@clerk/nextjs';
+import { BsAppIndicator } from 'react-icons/bs';
+
+
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -35,9 +38,9 @@ export default function Sidebar() {
         href="/dashboard" 
         className="h-20 flex items-center justify-center group relative"
       >
-        <div className="w-8 h-8 rounded-[20px] bg-gradient-to-br from-brand-primary to-purple-600 flex items-center justify-center">
-          <div className="w-4 h-4 border-2 border-white rounded"></div>
-        </div>
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <BsAppIndicator className="text-white h-5 w-5" />
+            </div>
         <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
           ScaleRFP
         </div>

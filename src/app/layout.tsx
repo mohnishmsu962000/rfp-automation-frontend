@@ -7,8 +7,11 @@ import { Toaster } from 'react-hot-toast';
 import { OrganizationProvider } from '@/providers/OrganizationProvider';
 
 export const metadata: Metadata = {
-  title: "ScaleRFP - AI-Powered RFP Automation",
-  description: "Automate RFP responses with AI",
+  title: 'ScaleRFP - AI-Powered RFP Automation',
+  description: 'Transform hours of RFP work into minutes with AI-powered responses',
+  icons: {
+    icon: '/icon',
+  }
 };
 
 export default function RootLayout({
