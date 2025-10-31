@@ -1,34 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher(['/', '/auth(.*)', '/terms', '/privacy', '/contact']);
-const isOnboardingRoute = createRouteMatcher(['/onboarding(.*)']);
 
 export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
-
-  if (!isPublicRoute(request) && !isOnboardingRoute(request)) {
-    const authData = await auth();
-    
-    if (authData.userId && authData.orgId) {
-      try {
-        const token = await authData.getToken();
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (response.status === 404) {
-          return NextResponse.redirect(new URL('/onboarding', request.url));
-        }
-      } catch (error) {
-        console.error('Middleware error:', error);
-      }
-    }
-  }
-
-  return NextResponse.next();
 });
 
 export const config = {
