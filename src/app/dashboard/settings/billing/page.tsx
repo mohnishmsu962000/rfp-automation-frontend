@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { useUsageStats, useBillingPlan } from '@/hooks/useStats';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
+import { useQuery } from '@tanstack/react-query';
 import { createApiClient } from '@/lib/api-client';
-import { FiCheck, FiX, FiZap, FiTrendingUp } from 'react-icons/fi';
+import { FiCheck, FiX, FiZap, FiTrendingUp, FiMail } from 'react-icons/fi';
 import { HiRocketLaunch } from 'react-icons/hi2';
+import { toast } from 'sonner';
 
 const PLANS = [
   {
@@ -25,10 +28,9 @@ const PLANS = [
   {
     tier: 'starter',
     name: 'Starter',
-    price: 3999,
+    price: 49,
     description: 'Great for small teams getting started',
     icon: FiTrendingUp,
-    popular: false,
     features: [
       { text: '10 RFPs per month', included: true },
       { text: '50 documents', included: true },
@@ -41,7 +43,7 @@ const PLANS = [
   {
     tier: 'growth',
     name: 'Growth',
-    price: 7999,
+    price: 99,
     description: 'For growing teams with more RFPs',
     icon: HiRocketLaunch,
     popular: true,
@@ -57,10 +59,9 @@ const PLANS = [
   {
     tier: 'pro',
     name: 'Pro',
-    price: 15999,
+    price: 199,
     description: 'For high-volume RFP teams',
     icon: HiRocketLaunch,
-    popular: false,
     features: [
       { text: '100 RFPs per month', included: true },
       { text: '500 documents', included: true },
@@ -74,34 +75,51 @@ const PLANS = [
 
 export default function BillingPage() {
   const { getToken } = useAuth();
+  const { user } = useUser();
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const { data: plan, isLoading: planLoading } = useBillingPlan();
   const { data: usage, isLoading: usageLoading } = useUsageStats();
 
-  const handleUpgrade = async (tier: string) => {
-    try {
+  const { data: userData } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
       const apiClient = createApiClient(getToken);
-      const { data } = await apiClient.post('/billing/subscribe', { plan_tier: tier });
-      
-      if (data.short_url) {
-        window.location.href = data.short_url;
+      const { data } = await apiClient.get('/api/users/me');
+      return data;
+    },
+  });
+
+  const handleUpgradeRequest = async (tier: string) => {
+    setSelectedPlan(tier);
+    setIsSubmitting(true);
+
+    try {
+      const selectedPlanData = PLANS.find(p => p.tier === tier);
+      const emailBody = `Upgrade Request\n\nUser: ${user?.fullName || user?.primaryEmailAddress?.emailAddress}\nEmail: ${user?.primaryEmailAddress?.emailAddress}\nCompany: ${userData?.company_name}\nCurrent Plan: ${plan?.tier || 'free'}\nRequested Plan: ${selectedPlanData?.name} ($${selectedPlanData?.price}/month)`;
+
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: user?.fullName || user?.primaryEmailAddress?.emailAddress || 'User',
+          email: user?.primaryEmailAddress?.emailAddress || '',
+          subject: `Plan Upgrade Request: ${selectedPlanData?.name}`,
+          message: emailBody,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Upgrade request sent! Our team will contact you within 24 hours.');
+        setSelectedPlan(null);
+      } else {
+        toast.error('Failed to send request. Please try again.');
       }
     } catch (error) {
-      console.error('Error upgrading:', error);
-      alert('Failed to upgrade. Please try again.');
-    }
-  };
-
-  const handleCancel = async () => {
-    if (!confirm('Are you sure you want to cancel your subscription?')) return;
-
-    try {
-      const apiClient = createApiClient(getToken);
-      await apiClient.post('/billing/cancel');
-      alert('Subscription cancelled successfully');
-      window.location.reload();
-    } catch (error) {
-      console.error('Error cancelling:', error);
-      alert('Failed to cancel subscription. Please try again.');
+      toast.error('Failed to send request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -116,19 +134,13 @@ export default function BillingPage() {
   const currentTier = plan?.tier || 'free';
   const rfpUsed = usage?.rfps?.used ?? 0;
   const rfpLimit = usage?.rfps?.limit ?? 2;
-  const rfpRemaining = usage?.rfps?.remaining ?? (rfpLimit - rfpUsed);  const docUsed = usage?.docs?.used ?? 0;
+  const rfpRemaining = usage?.rfps?.remaining ?? (rfpLimit - rfpUsed);
+  const docUsed = usage?.docs?.used ?? 0;
   const docLimit = usage?.docs?.limit ?? 10;
   const docRemaining = usage?.docs?.remaining ?? (docLimit - docUsed);
 
   const getRfpPercentage = () => (rfpUsed / rfpLimit) * 100;
   const getDocPercentage = () => (docUsed / docLimit) * 100;
-
-  const getButtonText = (tier: string) => {
-    if (tier === currentTier) return 'Current Plan';
-    if (tier === 'free') return 'Downgrade';
-    const tierOrder = ['free', 'starter', 'growth', 'pro'];
-    return tierOrder.indexOf(tier) > tierOrder.indexOf(currentTier) ? 'Upgrade' : 'Downgrade';
-  };
 
   const canUpgrade = (tier: string) => {
     const tierOrder = ['free', 'starter', 'growth', 'pro'];
@@ -136,7 +148,7 @@ export default function BillingPage() {
   };
 
   return (
-    <div className="space-y-8 mt-6">
+    <div className="space-y-8 mt-6 px-6">
       {(getRfpPercentage() > 80 || getDocPercentage() > 80) && (
         <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-6">
           <div className="flex items-start gap-4">
@@ -148,12 +160,6 @@ export default function BillingPage() {
               <p className="text-yellow-800 mt-1">
                 You have used {rfpUsed} out of {rfpLimit} RFPs and {docUsed} out of {docLimit} documents this month.
               </p>
-              <button
-                onClick={() => handleUpgrade('starter')}
-                className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium"
-              >
-                Upgrade Now
-              </button>
             </div>
           </div>
         </div>
@@ -193,9 +199,9 @@ export default function BillingPage() {
       </div>
 
       <div>
-        <div className="text-center mb-20 mt-20">
+        <div className="text-center mb-12">
           <h2 className="text-3xl font-medium text-gray-900 mb-2">Choose Your Plan</h2>
-          <p className="text-gray-600">Select the perfect plan for your team</p>
+          <p className="text-gray-600">Our team will contact you within 24 hours to complete your upgrade</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -220,29 +226,34 @@ export default function BillingPage() {
                   <div className="p-2 rounded-lg bg-gray-100">
                     <Icon className="h-6 w-6 text-gray-600" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-xl text-gray-900">{planOption.name}</h3>
-                  </div>
+                  <h3 className="font-bold text-xl text-gray-900">{planOption.name}</h3>
                 </div>
 
                 <div className="mb-4">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-medium text-gray-900">₹{planOption.price.toLocaleString()}</span>
+                    <span className="text-4xl font-medium text-gray-900">${planOption.price}</span>
                     {planOption.price > 0 && <span className="text-gray-500">/month</span>}
                   </div>
                   <p className="text-sm text-gray-600 mt-2">{planOption.description}</p>
                 </div>
 
                 <button
-                  onClick={() => {
-                    if (planOption.tier !== 'free' && canUpgrade(planOption.tier)) {
-                      handleUpgrade(planOption.tier);
-                    }
-                  }}
-                  disabled={isCurrentPlan || planOption.tier === 'free'}
-                  className="w-full py-3 px-4 rounded-lg font-semibold transition-all mb-6 bg-gradient-to-r from-brand-primary to-purple-600 text-white hover:shadow-lg"
+                  onClick={() => canUpgrade(planOption.tier) && handleUpgradeRequest(planOption.tier)}
+                  disabled={isCurrentPlan || !canUpgrade(planOption.tier) || isSubmitting}
+                  className="w-full py-3 px-4 rounded-lg font-semibold transition-all mb-6 bg-gradient-to-r from-brand-primary to-purple-600 text-white hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {getButtonText(planOption.tier)}
+                  {isSubmitting && selectedPlan === planOption.tier ? (
+                    <>Sending...</>
+                  ) : isCurrentPlan ? (
+                    'Current Plan'
+                  ) : canUpgrade(planOption.tier) ? (
+                    <>
+                      <FiMail className="h-4 w-4" />
+                      Request Upgrade
+                    </>
+                  ) : (
+                    'Not Available'
+                  )}
                 </button>
 
                 <div className="space-y-3">
@@ -262,21 +273,6 @@ export default function BillingPage() {
           })}
         </div>
       </div>
-
-      {currentTier !== 'free' && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="font-semibold text-lg mb-2">Cancel Subscription</h3>
-          <p className="text-gray-600 text-sm mb-4">
-            Your subscription will remain active until the end of your current billing period.
-          </p>
-          <button
-            onClick={handleCancel}
-            className="px-6 py-2.5 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-all font-medium"
-          >
-            Cancel Subscription
-          </button>
-        </div>
-      )}
 
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100 p-6">
         <div className="flex items-start gap-4">
