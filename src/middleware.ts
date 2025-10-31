@@ -10,11 +10,11 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   if (!isPublicRoute(request) && !isOnboardingRoute(request)) {
-    const { userId, orgId } = await auth();
+    const authData = await auth();
     
-    if (userId && orgId) {
+    if (authData.userId && authData.orgId) {
       try {
-        const token = await auth().getToken();
+        const token = await authData.getToken();
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
