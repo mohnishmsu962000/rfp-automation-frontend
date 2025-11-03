@@ -16,15 +16,17 @@ export default function DashboardLayout({
   const { getToken, isLoaded } = useAuth();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['user'],
-    queryFn: async () => {
-      const apiClient = createApiClient(getToken);
-      const { data } = await apiClient.get('/api/users/me');
-      return data;
-    },
-    retry: 1,
-    enabled: isLoaded && !!getToken,
-  });
+  queryKey: ['user'],
+  queryFn: async () => {
+    const token = await getToken();
+    if (!token) throw new Error('No token');
+    const apiClient = createApiClient(() => Promise.resolve(token));
+    const { data } = await apiClient.get('/api/users/me');
+    return data;
+  },
+  retry: 1,
+  enabled: isLoaded,
+});
 
   useEffect(() => {
     if (isLoaded && !isLoading && (error || !data)) {
