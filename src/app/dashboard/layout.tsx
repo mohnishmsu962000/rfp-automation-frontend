@@ -13,7 +13,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { getToken } = useAuth();
+  const { getToken, isLoaded } = useAuth();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['user'],
@@ -22,16 +22,17 @@ export default function DashboardLayout({
       const { data } = await apiClient.get('/api/users/me');
       return data;
     },
-    retry: false,
+    retry: 1,
+    enabled: isLoaded && !!getToken,
   });
 
   useEffect(() => {
-    if (!isLoading && (error || !data)) {
+    if (isLoaded && !isLoading && (error || !data)) {
       router.push('/onboarding');
     }
-  }, [data, error, isLoading, router]);
+  }, [data, error, isLoading, isLoaded, router]);
 
-  if (isLoading) {
+  if (!isLoaded || isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div>
