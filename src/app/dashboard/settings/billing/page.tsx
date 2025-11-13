@@ -28,7 +28,7 @@ const PLANS = [
   {
     tier: 'starter',
     name: 'Starter',
-    price: 49,
+    price: 3999,
     description: 'Great for small teams getting started',
     icon: FiTrendingUp,
     features: [
@@ -43,7 +43,7 @@ const PLANS = [
   {
     tier: 'growth',
     name: 'Growth',
-    price: 99,
+    price: 7999,
     description: 'For growing teams with more RFPs',
     icon: HiRocketLaunch,
     popular: true,
@@ -59,7 +59,7 @@ const PLANS = [
   {
     tier: 'pro',
     name: 'Pro',
-    price: 199,
+    price: 15999,
     description: 'For high-volume RFP teams',
     icon: HiRocketLaunch,
     features: [
@@ -231,7 +231,7 @@ export default function BillingPage() {
 
                 <div className="mb-4">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-medium text-gray-900">${planOption.price}</span>
+                    <span className="text-4xl font-medium text-gray-900">INR {planOption.price}</span>
                     {planOption.price > 0 && <span className="text-gray-500">/month</span>}
                   </div>
                   <p className="text-sm text-gray-600 mt-2">{planOption.description}</p>
